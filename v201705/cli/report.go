@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	gads "github.com/Getsidecar/gads/v201705"
 	"log"
+
+	gads "github.com/Getsidecar/gads/v201710"
 )
 
 var configJson = flag.String("oauth", "./oauth.json", "API credentials")

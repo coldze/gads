@@ -2,9 +2,10 @@ package main
 
 import (
 	"crypto/rand"
-	"github.com/Getsidecar/gads/v201705"
-	"golang.org/x/oauth2"
 	"log"
+
+	gads "github.com/Getsidecar/gads/v201710"
+	"golang.org/x/oauth2"
 )
 
 func rand_str(str_size int) string {
@@ -60,7 +61,6 @@ func main() {
 				"ServingStatus",
 				"StartDate",
 				"EndDate",
-				"AdServingOptimizationStatus",
 				"Settings",
 			},
 			Ordering: []gads.OrderBy{

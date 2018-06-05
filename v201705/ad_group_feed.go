@@ -1,9 +1,7 @@
-package v201705
+package v201710
 
-import (
 //	"encoding/xml"
 //	"fmt"
-)
 
 type AdGroupFeedService struct {
 	Auth

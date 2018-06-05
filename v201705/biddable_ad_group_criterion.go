@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
@@ -24,7 +24,7 @@ type BiddableAdGroupCriterion struct {
 	QualityInfo *QualityInfo `xml:"qualityInfo,omitempty"`
 
 	BiddingStrategyConfiguration *BiddingStrategyConfiguration `xml:"biddingStrategyConfiguration,omitempty"`
-	BidModifier                  int64                         `xml:"bidModifier,omitempty"`
+	BidModifier                  float64                       `xml:"bidModifier,omitempty"`
 
 	FinalUrls           []string         `xml:"finalUrls,omitempty"`
 	FinalMobileUrls     []string         `xml:"finalMobileUrls,omitempty"`
@@ -55,7 +55,9 @@ func (bagc BiddableAdGroupCriterion) MarshalXML(e *xml.Encoder, start xml.StartE
 	if bagc.BidModifier != 0 {
 		e.EncodeElement(&bagc.BidModifier, xml.StartElement{Name: xml.Name{baseUrl, "bidModifier"}})
 	}
-	e.EncodeElement(&bagc.UrlCustomParameters, xml.StartElement{Name: xml.Name{baseUrl, "urlCustomParameters"}})
+	if len(bagc.UrlCustomParameters.CustomParameters) > 0 {
+		e.EncodeElement(&bagc.UrlCustomParameters, xml.StartElement{Name: xml.Name{baseUrl, "urlCustomParameters"}})
+	}
 	e.EncodeToken(start.End())
 	return nil
 }

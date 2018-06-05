@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	version               = "v201705"
+	version               = "v201710"
 	rootUrl               = "https://adwords.google.com/api/adwords/cm/"
 	baseUrl               = "https://adwords.google.com/api/adwords/cm/" + version
 	rootMcmUrl            = "https://adwords.google.com/api/adwords/mcm/"
@@ -91,6 +91,7 @@ type Auth struct {
 	DeveloperToken string
 	UserAgent      string
 	PartialFailure bool
+	ValidateOnly   bool
 	Testing        *testing.T `json:"-"`
 	Client         HttpClient `json:"-"`
 }
@@ -119,8 +120,8 @@ type OrderBy struct {
 }
 
 type Paging struct {
-	Offset int64 `xml:"https://adwords.google.com/api/adwords/cm/v201705 startIndex"`
-	Limit  int64 `xml:"https://adwords.google.com/api/adwords/cm/v201705 numberResults"`
+	Offset int64 `xml:"https://adwords.google.com/api/adwords/cm/v201710 startIndex"`
+	Limit  int64 `xml:"https://adwords.google.com/api/adwords/cm/v201710 numberResults"`
 }
 
 type Selector struct {
@@ -137,32 +138,32 @@ type AWQLQuery struct {
 	Query   string `xml:"query"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.DayOfWeek
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.DayOfWeek
 // Days of the week.
 // MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 type DayOfWeek string
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.MinuteOfHour
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.MinuteOfHour
 // Minutes in an hour. Currently only 0, 15, 30, and 45 are supported
 // ZERO, FIFTEEN, THIRTY, FORTY_FIVE
 type MinuteOfHour string
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.GeoRestriction
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.GeoRestriction
 // A restriction used to determine if the request context's geo should be matched.
 // UNKNOWN, LOCATION_OF_PRESENCE
 type GeoRestriction string
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.PolicyData
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.PolicyData
 // Approval and policy information attached to an entity.
 type PolicyData struct {
-	DisapprovalReasons []DisapprovalReason `xml:"https://adwords.google.com/api/adwords/cm/v201705 disapprovalReasons,omitempty"`
-	PolicyDataType     string              `xml:"https://adwords.google.com/api/adwords/cm/v201705 PolicyData.Type,omitempty"`
+	DisapprovalReasons []DisapprovalReason `xml:"https://adwords.google.com/api/adwords/cm/v201710 disapprovalReasons,omitempty"`
+	PolicyDataType     string              `xml:"https://adwords.google.com/api/adwords/cm/v201710 PolicyData.Type,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.DisapprovalReason
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.DisapprovalReason
 // Container for information about why an AdWords entity was disapproved.
 type DisapprovalReason struct {
-	ShortName string `xml:"https://adwords.google.com/api/adwords/cm/v201705 shortName,omitempty"`
+	ShortName string `xml:"https://adwords.google.com/api/adwords/cm/v201710 shortName,omitempty"`
 }
 
 // error parsers
@@ -181,6 +182,7 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 		DeveloperToken   string `xml:"developerToken"`
 		ClientCustomerId string `xml:"clientCustomerId,omitempty"`
 		PartialFailure   bool   `xml:"partialFailure,omitempty"`
+		ValidateOnly     bool   `xml:"validateOnly,omitempty"`
 	}
 
 	type soapReqBody struct {
@@ -203,6 +205,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	// https://developers.google.com/adwords/api/docs/guides/partial-failure
 	if a.PartialFailure {
 		reqHead.PartialFailure = true
+	}
+	if a.ValidateOnly {
+		reqHead.ValidateOnly = true
 	}
 
 	reqBody, err := xml.MarshalIndent(
@@ -241,9 +246,9 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	respBody, err = ioutil.ReadAll(resp.Body)
 
 	// Added some logging/"poor man's" debugging to inspect outbound SOAP requests
-	//if level := os.Getenv("DEBUG"); level != "" {
-	//	fmt.Printf("response ->\n%s\n", string(respBody))
-	//}
+	if level := os.Getenv("DEBUG"); level != "" {
+		fmt.Printf("response ->\n%s\n", string(respBody))
+	}
 
 	if a.Testing != nil {
 		a.Testing.Logf("respBody ->\n%s\n%s\n", string(respBody), resp.Status)
@@ -273,11 +278,21 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 	}
 	if resp.StatusCode == 400 || resp.StatusCode == 401 || resp.StatusCode == 403 || resp.StatusCode == 405 || resp.StatusCode == 500 {
 		fault := Fault{}
-		fmt.Printf("unknown error ->\n%s\n", string(soapResp.Body.Response))
 		err = xml.Unmarshal(soapResp.Body.Response, &fault)
 		if err != nil {
 			return respBody, err
 		}
+
+		for i := range fault.Errors.ApiExceptionFaults {
+			switch fault.Errors.ApiExceptionFaults[i].ErrorsType {
+			case "AuthenticationError", "RateExceededError", "DatabaseError", "InternalApiError":
+				return soapResp.Body.Response, &baseError{
+					code:    fault.Errors.ApiExceptionFaults[i].Reason,
+					origErr: &fault.Errors,
+				}
+			}
+		}
+
 		return soapResp.Body.Response, &fault.Errors
 	}
 	return soapResp.Body.Response, err

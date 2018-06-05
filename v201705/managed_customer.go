@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
@@ -73,7 +73,7 @@ func (s *ManagedCustomerService) Get(selector Selector) (managedCustomerPage Man
 
 func (s *ManagedCustomerService) Mutate(managedCustomerOperations ManagedCustomerOperations) (managedCustomers []ManagedCustomer, err error) {
 	type managedCustomerOperation struct {
-		Action          string          `xml:"https://adwords.google.com/api/adwords/cm/v201705 operator"`
+		Action          string          `xml:"https://adwords.google.com/api/adwords/cm/v201710 operator"`
 		ManagedCustomer ManagedCustomer `xml:"operand"`
 	}
 

@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ func (b BufferCloser) Read(p []byte) (int, error) {
 }
 
 const GOOD_RESP = `
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Header><ResponseHeader xmlns="https://adwords.google.com/api/adwords/cm/v201705"><requestId>TEST_REQUEST_ID</requestId><serviceName>SharedSetService</serviceName><methodName>get</methodName><operations>1</operations><responseTime>225</responseTime></ResponseHeader></soap:Header><soap:Body><getResponse xmlns="https://adwords.google.com/api/adwords/cm/v201705"><rval><totalNumEntries>4</totalNumEntries><Page.Type>SharedSetPage</Page.Type><entries><sharedSetId>1369022798</sharedSetId><name>SQM Group 1</name><type>NEGATIVE_KEYWORDS</type><memberCount>0</memberCount><referenceCount>0</referenceCount><status>REMOVED</status></entries><entries><sharedSetId>1369022801</sharedSetId><name>SQM Group 2</name><type>NEGATIVE_KEYWORDS</type><memberCount>0</memberCount><referenceCount>0</referenceCount><status>REMOVED</status></entries><entries><sharedSetId>1369037308</sharedSetId><name>SQM Group 1</name><type>NEGATIVE_KEYWORDS</type><memberCount>160</memberCount><referenceCount>0</referenceCount><status>ENABLED</status></entries><entries><sharedSetId>1369037335</sharedSetId><name>SQM Group 2</name><type>NEGATIVE_KEYWORDS</type><memberCount>441</memberCount><referenceCount>0</referenceCount><status>ENABLED</status></entries></rval></getResponse></soap:Body></soap:Envelope>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Header><ResponseHeader xmlns="https://adwords.google.com/api/adwords/cm/v201710"><requestId>TEST_REQUEST_ID</requestId><serviceName>SharedSetService</serviceName><methodName>get</methodName><operations>1</operations><responseTime>225</responseTime></ResponseHeader></soap:Header><soap:Body><getResponse xmlns="https://adwords.google.com/api/adwords/cm/v201710"><rval><totalNumEntries>4</totalNumEntries><Page.Type>SharedSetPage</Page.Type><entries><sharedSetId>1369022798</sharedSetId><name>SQM Group 1</name><type>NEGATIVE_KEYWORDS</type><memberCount>0</memberCount><referenceCount>0</referenceCount><status>REMOVED</status></entries><entries><sharedSetId>1369022801</sharedSetId><name>SQM Group 2</name><type>NEGATIVE_KEYWORDS</type><memberCount>0</memberCount><referenceCount>0</referenceCount><status>REMOVED</status></entries><entries><sharedSetId>1369037308</sharedSetId><name>SQM Group 1</name><type>NEGATIVE_KEYWORDS</type><memberCount>160</memberCount><referenceCount>0</referenceCount><status>ENABLED</status></entries><entries><sharedSetId>1369037335</sharedSetId><name>SQM Group 2</name><type>NEGATIVE_KEYWORDS</type><memberCount>441</memberCount><referenceCount>0</referenceCount><status>ENABLED</status></entries></rval></getResponse></soap:Body></soap:Envelope>
 `
 
 func (m *MockValidSharedSetClient) Do(req *http.Request) (*http.Response, error) {

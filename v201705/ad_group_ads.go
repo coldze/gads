@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
@@ -33,6 +33,16 @@ func (a1 AdGroupAds) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		})
 		e.EncodeElement(ad.Status, xml.StartElement{Name: xml.Name{"", "status"}})
 		e.EncodeElement(ad.Labels, xml.StartElement{Name: xml.Name{"", "labels"}})
+	/*case Ad:
+		ad := a.(Ad)
+		e.EncodeElement(ad.AdGroupId, xml.StartElement{Name: xml.Name{"", "adGroupId"}})
+		e.EncodeElement(ad, xml.StartElement{
+			xml.Name{"", "ad"},
+			[]xml.Attr{
+				xml.Attr{xml.Name{"http://www.w3.org/2001/XMLSchema-instance", "type"}, "Ad"},
+			},
+		})
+		e.EncodeElement(ad.Status, xml.StartElement{Name: xml.Name{"", "status"}})*/
 	case ImageAd:
 		return ERROR_NOT_YET_IMPLEMENTED
 	case TemplateAd:
@@ -74,7 +84,6 @@ func (aga *AdGroupAds) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) er
 				if err != nil {
 					return err
 				}
-				fmt.Println(typeName)
 				switch typeName {
 				case "TextAd":
 					a := TextAd{AdGroupId: adGroupId}
@@ -110,12 +119,21 @@ func (aga *AdGroupAds) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) er
 					if err != nil {
 						return err
 					}
+					ad = a
 				case "ProductAd":
 					a := ProductAd{AdGroupId: adGroupId}
 					err := dec.DecodeElement(&a, &start)
 					if err != nil {
 						return err
 					}
+					ad = a
+				case "ResponsiveDisplayAd":
+					a := ResponsiveDisplayAd{AdGroupId: adGroupId}
+					err := dec.DecodeElement(&a, &start)
+					if err != nil {
+						return err
+					}
+					ad = a
 				default:
 					return fmt.Errorf("unknown AdGroupCriterion -> %#v", start)
 				}
@@ -192,6 +210,8 @@ func (aga *AdGroupAds) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) er
 		*aga = append(*aga, a)
 	case ProductAd:
 		a.Status = status
+		*aga = append(*aga, a)
+	default:
 		*aga = append(*aga, a)
 	}
 	return nil

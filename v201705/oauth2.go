@@ -1,11 +1,12 @@
-package v201705
+package v201710
 
 import (
 	"encoding/json"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"time"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
 type AuthConfig struct {

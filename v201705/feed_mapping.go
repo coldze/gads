@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 type FeedMappingService struct {
 	Auth

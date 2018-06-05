@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
@@ -200,25 +200,17 @@ func (s AdGroupCriterionService) Get(selector Selector) (adGroupCriterions AdGro
 //
 //     https://developers.google.com/adwords/api/docs/reference/v201409/AdGroupCriterionService#mutate
 //
-func (s *AdGroupCriterionService) Mutate(adGroupCriterionOperations AdGroupCriterionOperations) (adGroupCriterions AdGroupCriterions, err error) {
-	type adGroupCriterionOperation struct {
-		Action           string      `xml:"operator"`
-		AdGroupCriterion interface{} `xml:"operand"`
-	}
-	operations := []adGroupCriterionOperation{}
-	for action, adGroupCriterions := range adGroupCriterionOperations {
-		for _, adGroupCriterion := range adGroupCriterions {
-			operations = append(operations,
-				adGroupCriterionOperation{
-					Action:           action,
-					AdGroupCriterion: adGroupCriterion,
-				},
-			)
-		}
-	}
+
+type AdGroupCriterionOperation struct {
+	Action           string      `xml:"operator"`
+	AdGroupCriterion interface{} `xml:"operand"`
+}
+
+func (s *AdGroupCriterionService) MutateOperations(operations []AdGroupCriterionOperation) (adGroupCriterions AdGroupCriterions, err error) {
+
 	mutation := struct {
 		XMLName xml.Name
-		Ops     []adGroupCriterionOperation `xml:"operations"`
+		Ops     []AdGroupCriterionOperation `xml:"operations"`
 	}{
 		XMLName: xml.Name{
 			Space: baseUrl,
@@ -239,6 +231,21 @@ func (s *AdGroupCriterionService) Mutate(adGroupCriterionOperations AdGroupCrite
 	}
 
 	return mutateResp.AdGroupCriterions, err
+}
+
+func (s *AdGroupCriterionService) Mutate(adGroupCriterionOperations AdGroupCriterionOperations) (adGroupCriterions AdGroupCriterions, err error) {
+	operations := []AdGroupCriterionOperation{}
+	for action, adGroupCriterions := range adGroupCriterionOperations {
+		for _, adGroupCriterion := range adGroupCriterions {
+			operations = append(operations,
+				AdGroupCriterionOperation{
+					Action:           action,
+					AdGroupCriterion: adGroupCriterion,
+				},
+			)
+		}
+	}
+	return s.MutateOperations(operations)
 }
 
 // MutateLabel allows you to add and removes labels from ad groups.

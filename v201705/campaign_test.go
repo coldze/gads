@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"fmt"
@@ -17,11 +17,10 @@ func testCampaign(t *testing.T) (Campaign, func()) {
 		CampaignOperations{
 			"ADD": {
 				Campaign{
-					Name:                        "test campaign " + rand_str(10),
-					Status:                      "PAUSED",
-					StartDate:                   time.Now().Format("20060102"),
-					BudgetId:                    budget.Id,
-					AdServingOptimizationStatus: "ROTATE_INDEFINITELY",
+					Name:      "test campaign " + rand_str(10),
+					Status:    "PAUSED",
+					StartDate: time.Now().Format("20060102"),
+					BudgetId:  budget.Id,
 					Settings: []CampaignSetting{
 						NewRealTimeBiddingSetting(true),
 					},
@@ -56,11 +55,10 @@ func TestCampaign(t *testing.T) {
 		CampaignOperations{
 			"ADD": {
 				Campaign{
-					Name:                        "test campaign " + rand_str(10),
-					Status:                      "PAUSED",
-					StartDate:                   time.Now().Format("20060102"),
-					BudgetId:                    budget.Id,
-					AdServingOptimizationStatus: "ROTATE_INDEFINITELY",
+					Name:      "test campaign " + rand_str(10),
+					Status:    "PAUSED",
+					StartDate: time.Now().Format("20060102"),
+					BudgetId:  budget.Id,
 					Settings: []CampaignSetting{
 						NewRealTimeBiddingSetting(true),
 					},
@@ -120,7 +118,6 @@ func TestCampaign(t *testing.T) {
 				"ServingStatus",
 				"StartDate",
 				"EndDate",
-				"AdServingOptimizationStatus",
 				"Settings",
 				"Labels",
 			},

@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
@@ -30,11 +30,13 @@ type AdGroup struct {
 	CampaignId                   int64                          `xml:"campaignId,omitempty"`
 	CampaignName                 string                         `xml:"campaignName,omitempty"`
 	Name                         string                         `xml:"name,omitempty"`
+	AdServingOptimizationStatus  string                         `xml:"adServingOptimizationStatus"`
 	Status                       string                         `xml:"status,omitempty"`
 	Settings                     []AdSetting                    `xml:"settings,omitempty"`
 	BiddingStrategyConfiguration []BiddingStrategyConfiguration `xml:"biddingStrategyConfiguration"`
 	ContentBidCriterionTypeGroup *string                        `xml:"contentBidCriterionTypeGroup"`
 	UrlCustomParameters          *CustomParameters              `xml:"urlCustomParameters"`
+	Labels                       []Label                        `xml:"labels"`
 }
 
 type AdGroupOperations map[string][]AdGroup

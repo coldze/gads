@@ -1,4 +1,4 @@
-package v201705
+package v201710
 
 import "encoding/xml"
 
@@ -54,7 +54,7 @@ func (s SharedSetService) Get(selector Selector) (sharedSets []SharedSet, totalC
 	return getResp.SharedSets, getResp.Size, err
 }
 
-func (s SharedSetService) Mutate(operations []SharedSetOperation) error {
+func (s SharedSetService) Mutate(operations []SharedSetOperation) ([]SharedSet, error) {
 	mutateRequest := struct {
 		XMLName xml.Name
 		Ops     []SharedSetOperation `xml:"operations"`
@@ -64,6 +64,20 @@ func (s SharedSetService) Mutate(operations []SharedSetOperation) error {
 			Local: "mutate",
 		},
 		Ops: operations}
-	_, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
-	return err
+
+	respBody, err := s.Auth.request(sharedSetServiceUrl, "mutate", mutateRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	getResp := struct {
+		ListReturnValueType string      `xml:"rval>ListReturnValue.Type"`
+		SharedSets          []SharedSet `xml:"rval>value"`
+	}{}
+	err = xml.Unmarshal([]byte(respBody), &getResp)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.SharedSets, nil
 }

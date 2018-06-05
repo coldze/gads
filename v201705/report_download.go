@@ -1,15 +1,16 @@
-package v201705
+package v201710
 
 import (
 	"bytes"
 	"encoding/csv"
 	"encoding/xml"
-	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
+
+type ReportParser func(report io.Reader) error
 
 type ReportDownloadService struct {
 	Auth
@@ -20,11 +21,59 @@ type reportDefinitionXml struct {
 	XMLName xml.Name
 }
 
+//type is equiv to errorString eg AuthorizationError.USER_PERMISSION_DENIED
+type ApiError struct {
+	Type string `xml:"type"`
+}
+
+type ReportDownloadError struct {
+	XMLName  xml.Name `xml:"reportDownloadError"`
+	ApiError ApiError
+}
+
+func (s ApiError) Error() string {
+	return s.Type
+}
+
+func (s ApiError) Code() string {
+	if parts := strings.Split(s.Type, "."); len(parts) > 1 {
+		return parts[1]
+	}
+	return s.Type
+}
+
 func NewReportDownloadService(auth *Auth) *ReportDownloadService {
 	return &ReportDownloadService{Auth: *auth}
 }
 
-func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res interface{}, err error) {
+
+func NewCSVParser(result chan<- map[string]string) ReportParser {
+	return func(report io.Reader) error {
+		defer close(result)
+		reader := csv.NewReader(report)
+		header, err := reader.Read()
+		if err != nil {
+			return err
+		}
+		for {
+			record, err := reader.Read()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return err
+			}
+			row := make(map[string]string)
+			for i := 0; i < len(record); i++ {
+				column := header[i]
+				row[column] = record[i]
+			}
+			result <- row
+		}
+		return err
+	}
+}
+
+func (s *ReportDownloadService) Get(reportDefinition ReportDefinition, parser ReportParser) (res interface{}, err error) {
 	reportDefinition.Selector.XMLName = xml.Name{baseUrl, "selector"}
 	repDef := reportDefinitionXml{
 		ReportDefinition: &reportDefinition,
@@ -44,39 +93,47 @@ func (s *ReportDownloadService) Get(reportDefinition ReportDefinition) (res inte
 		return res, err
 	}
 	defer resp.Body.Close()
-	/*respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return res, err
+
+	if resp.StatusCode != 200 {
+		dec := xml.NewDecoder(resp.Body)
+		el := &ReportDownloadError{}
+		if err := dec.Decode(el); err != nil {
+			return nil, err
+		}
+		return nil, el.ApiError
 	}
-	return string(respBody), err*/
-	return parseReport(resp.Body)
+	return nil, parser(resp.Body)
 }
 
-func (s *ReportDownloadService) AWQL(awql string, fmt string) (res interface{}, err error) {
+func (s *ReportDownloadService) StreamAWQL(awql string, fmt string) (io.ReadCloser, error) {
 	form := url.Values{}
 	form.Add("__rdquery", awql)
 	form.Add("__fmt", fmt)
 	resp, err := s.makeRequest(form)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
-	defer resp.Body.Close()
-	/*respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return res, err
-	}
-	return string(respBody), err*/
 
-	// if we didn't get a 200 bubble up the error
 	if resp.StatusCode != 200 {
-		response, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return res, err
+		dec := xml.NewDecoder(resp.Body)
+		el := &ReportDownloadError{}
+		if err := dec.Decode(el); err != nil {
+			return nil, err
 		}
-		return res, errors.New(string(response))
+		return nil, el.ApiError
 	}
 
-	return parseReport(resp.Body)
+	return resp.Body, nil
+}
+
+func (s *ReportDownloadService) AWQL(awql string, fmt string, parser ReportParser) (res interface{}, err error) {
+	body, err := s.StreamAWQL(awql, fmt)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+
+	return nil, parser(body)
 }
 
 // Make our http request using the given form (re-usable for either XML or AWQL)

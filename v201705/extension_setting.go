@@ -1,58 +1,58 @@
-package v201705
+package v201710
 
 import (
 	"encoding/xml"
 	"fmt"
 )
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.ExtensionSetting
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.ExtensionSetting
 // A setting specifying when and which extensions should serve at a given level (customer, campaign, or ad group).
 type ExtensionSetting struct {
 	PlatformRestrictions ExtensionSettingPlatform `xml:"platformRestrictions,omitempty"`
 
-	Extensions Extension `xml:"https://adwords.google.com/api/adwords/cm/v201705 extensions,omitempty"`
+	Extensions Extension `xml:"https://adwords.google.com/api/adwords/cm/v201710 extensions,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.ExtensionSetting.Platform
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.ExtensionSetting.Platform
 // Different levels of platform restrictions
 // DESKTOP, MOBILE, NONE
 type ExtensionSettingPlatform string
 
 type Extension interface{}
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.ExtensionFeedItem
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.ExtensionFeedItem
 // Contains base extension feed item data for an extension in an extension feed managed by AdWords.
 type ExtensionFeedItem struct {
 	XMLName xml.Name `json:"-" xml:"extensions"`
 
-	FeedId                  int64                      `xml:"https://adwords.google.com/api/adwords/cm/v201705 feedId,omitempty"`
-	FeedItemId              int64                      `xml:"https://adwords.google.com/api/adwords/cm/v201705 feedItemId,omitempty"`
-	Status                  *FeedItemStatus            `xml:"https://adwords.google.com/api/adwords/cm/v201705 status,omitempty"`
-	FeedType                *FeedType                  `xml:"https://adwords.google.com/api/adwords/cm/v201705 feedType,omitempty"`
-	StartTime               string                     `xml:"https://adwords.google.com/api/adwords/cm/v201705 startTime,omitempty"` //  special value "00000101 000000" may be used to clear an existing start time.
-	EndTime                 string                     `xml:"https://adwords.google.com/api/adwords/cm/v201705 endTime,omitempty"`   //  special value "00000101 000000" may be used to clear an existing end time.
-	DevicePreference        *FeedItemDevicePreference  `xml:"https://adwords.google.com/api/adwords/cm/v201705 devicePreference,omitempty"`
-	Scheduling              *FeedItemScheduling        `xml:"https://adwords.google.com/api/adwords/cm/v201705 scheduling,omitempty"`
-	CampaignTargeting       *FeedItemCampaignTargeting `xml:"https://adwords.google.com/api/adwords/cm/v201705 campaignTargeting,omitempty"`
-	AdGroupTargeting        *FeedItemAdGroupTargeting  `xml:"https://adwords.google.com/api/adwords/cm/v201705 adGroupTargeting,omitempty"`
-	KeywordTargeting        *Keyword                   `xml:"https://adwords.google.com/api/adwords/cm/v201705 keywordTargeting,omitempty"`
-	GeoTargeting            *Location                  `xml:"https://adwords.google.com/api/adwords/cm/v201705 geoTargeting,omitempty"`
-	GeoTargetingRestriction *FeedItemGeoRestriction    `xml:"https://adwords.google.com/api/adwords/cm/v201705 geoTargetingRestriction,omitempty"`
-	PolicyData              *[]FeedItemPolicyData      `xml:"https://adwords.google.com/api/adwords/cm/v201705 policyData,omitempty"`
+	FeedId                  int64                      `xml:"https://adwords.google.com/api/adwords/cm/v201710 feedId,omitempty"`
+	FeedItemId              int64                      `xml:"https://adwords.google.com/api/adwords/cm/v201710 feedItemId,omitempty"`
+	Status                  *FeedItemStatus            `xml:"https://adwords.google.com/api/adwords/cm/v201710 status,omitempty"`
+	FeedType                *FeedType                  `xml:"https://adwords.google.com/api/adwords/cm/v201710 feedType,omitempty"`
+	StartTime               string                     `xml:"https://adwords.google.com/api/adwords/cm/v201710 startTime,omitempty"` //  special value "00000101 000000" may be used to clear an existing start time.
+	EndTime                 string                     `xml:"https://adwords.google.com/api/adwords/cm/v201710 endTime,omitempty"`   //  special value "00000101 000000" may be used to clear an existing end time.
+	DevicePreference        *FeedItemDevicePreference  `xml:"https://adwords.google.com/api/adwords/cm/v201710 devicePreference,omitempty"`
+	Scheduling              *FeedItemScheduling        `xml:"https://adwords.google.com/api/adwords/cm/v201710 scheduling,omitempty"`
+	CampaignTargeting       *FeedItemCampaignTargeting `xml:"https://adwords.google.com/api/adwords/cm/v201710 campaignTargeting,omitempty"`
+	AdGroupTargeting        *FeedItemAdGroupTargeting  `xml:"https://adwords.google.com/api/adwords/cm/v201710 adGroupTargeting,omitempty"`
+	KeywordTargeting        *Keyword                   `xml:"https://adwords.google.com/api/adwords/cm/v201710 keywordTargeting,omitempty"`
+	GeoTargeting            *Location                  `xml:"https://adwords.google.com/api/adwords/cm/v201710 geoTargeting,omitempty"`
+	GeoTargetingRestriction *FeedItemGeoRestriction    `xml:"https://adwords.google.com/api/adwords/cm/v201710 geoTargetingRestriction,omitempty"`
+	PolicyData              *[]FeedItemPolicyData      `xml:"https://adwords.google.com/api/adwords/cm/v201710 policyData,omitempty"`
 
-	ExtensionFeedItemType string `xml:"https://adwords.google.com/api/adwords/cm/v201705 ExtensionFeedItem.Type,omitempty"`
+	ExtensionFeedItemType string `xml:"https://adwords.google.com/api/adwords/cm/v201710 ExtensionFeedItem.Type,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201705/AdGroupExtensionSettingService.CallFeedItem
+// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.CallFeedItem
 // Represents a Call extension.
 type CallFeedItem struct {
 	ExtensionFeedItem
 
-	CallPhoneNumber               string             `xml:"https://adwords.google.com/api/adwords/cm/v201705 callPhoneNumber,omitempty"`
-	CallCountryCode               string             `xml:"https://adwords.google.com/api/adwords/cm/v201705 callCountryCode,omitempty"`
-	CallTracking                  bool               `xml:"https://adwords.google.com/api/adwords/cm/v201705 callTracking,omitempty"`
-	CallConversionType            CallConversionType `xml:"https://adwords.google.com/api/adwords/cm/v201705 callConversionType,omitempty"`
-	DisableCallConversionTracking bool               `xml:"https://adwords.google.com/api/adwords/cm/v201705 disableCallConversionTracking,omitempty"`
+	CallPhoneNumber               string             `xml:"https://adwords.google.com/api/adwords/cm/v201710 callPhoneNumber,omitempty"`
+	CallCountryCode               string             `xml:"https://adwords.google.com/api/adwords/cm/v201710 callCountryCode,omitempty"`
+	CallTracking                  bool               `xml:"https://adwords.google.com/api/adwords/cm/v201710 callTracking,omitempty"`
+	CallConversionType            CallConversionType `xml:"https://adwords.google.com/api/adwords/cm/v201710 callConversionType,omitempty"`
+	DisableCallConversionTracking bool               `xml:"https://adwords.google.com/api/adwords/cm/v201710 disableCallConversionTracking,omitempty"`
 }
 
 func extensionsUnmarshalXML(dec *xml.Decoder, start xml.StartElement) (ext interface{}, err error) {
@@ -75,7 +75,7 @@ func (s ExtensionSetting) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 	e.EncodeToken(start)
 	if s.PlatformRestrictions != "NONE" {
 		e.EncodeElement(&s.PlatformRestrictions, xml.StartElement{Name: xml.Name{
-			"https://adwords.google.com/api/adwords/cm/v201705",
+			"https://adwords.google.com/api/adwords/cm/v201710",
 			"platformRestrictions"}})
 	}
 	switch extType := s.Extensions.(type) {
