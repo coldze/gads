@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gads "github.com/Getsidecar/gads/v201710"
+	gads "github.com/coldze/gads/v201710"
 	"golang.org/x/oauth2"
 )
 

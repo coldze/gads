@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	gads "github.com/Getsidecar/gads/v201710"
+	gads "github.com/coldze/gads/v201710"
 )
 
 var configJson = flag.String("oauth", "./oauth.json", "API credentials")
