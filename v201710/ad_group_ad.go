@@ -52,6 +52,63 @@ type ExpandedTextAd struct {
 	BaseAdGroupId       *int64                 `xml:"-"`
 }
 
+type BatchExpandedTextAd struct {
+	AdGroupId           int64                  `xml:"-"`
+	Id                  int64                  `xml:"id,omitempty"`
+	FinalUrls           []string               `xml:"finalUrls,omitempty"`
+	FinalMobileUrls     []string               `xml:"finalMobileUrls,omitempty"`
+	TrackingUrlTemplate string                 `xml:"trackingUrlTemplate,omitempty"`
+	UrlCustomParameters *CustomParameters      `xml:"urlCustomParameters,omitempty"`
+	Type                string                 `xml:"type,omitempty"`
+	HeadlinePart1       string                 `xml:"headlinePart1,omitempty"`
+	HeadlinePart2       string                 `xml:"headlinePart2,omitempty"`
+	Description         string                 `xml:"description,omitempty"`
+	Path1               string                 `xml:"path1,omitempty"`
+	Path2               string                 `xml:"path2,omitempty"`
+	ExperimentData      *AdGroupExperimentData `xml:"-"`
+	Status              string                 `xml:"-"`
+	Labels              []Label                `xml:"-"`
+	BaseCampaignId      *int64                 `xml:"-"`
+	BaseAdGroupId       *int64                 `xml:"-"`
+}
+
+type BatchExpandedTextAdInner struct {
+	HeadlinePart1       string   `xml:"headlinePart1,omitempty"`
+	HeadlinePart2       string   `xml:"headlinePart2,omitempty"`
+	Description         string   `xml:"description,omitempty"`
+	Path1               string   `xml:"path1,omitempty"`
+	Path2               string   `xml:"path2,omitempty"`
+	FinalUrls           []string `xml:"finalUrls,omitempty"`
+	FinalMobileUrls     []string `xml:"FinalMobileUrls,omitempty"`
+	TrackingUrlTemplate string   `xml:"trackingUrlTemplate,omitempty"`
+}
+
+func (ad BatchExpandedTextAd) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Attr = []xml.Attr{xml.Attr{Value: "operand"}}
+	e.EncodeToken(start)
+
+	e.EncodeElement(ad.Id, xml.StartElement{Name: xml.Name{"", "id"}})
+	e.EncodeElement(ad.AdGroupId, xml.StartElement{Name: xml.Name{"", "adGroupId"}})
+	e.EncodeElement(BatchExpandedTextAdInner{
+		HeadlinePart1:       ad.HeadlinePart1,
+		HeadlinePart2:       ad.HeadlinePart2,
+		Description:         ad.Description,
+		Path1:               ad.Path1,
+		Path2:               ad.Path2,
+		FinalUrls:           ad.FinalUrls,
+		TrackingUrlTemplate: ad.TrackingUrlTemplate,
+	}, xml.StartElement{
+		xml.Name{"", "ad"},
+		[]xml.Attr{
+			xml.Attr{xml.Name{"http://www.w3.org/2001/XMLSchema-instance", "type"}, "ExpandedTextAd"},
+		},
+	})
+	e.EncodeElement(ad.Status, xml.StartElement{Name: xml.Name{"", "status"}})
+	e.EncodeElement(ad.Labels, xml.StartElement{Name: xml.Name{"", "labels"}})
+
+	return e.EncodeToken(xml.EndElement{Name: start.Name})
+}
+
 type ResponsiveDisplayAd struct {
 	AdGroupId           int64                 `xml:"-"`
 	Id                  int64                 `xml:"id,omitempty"`

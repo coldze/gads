@@ -21,9 +21,9 @@ func NewBudgetService(auth *Auth) *BudgetService {
 type Budget struct {
 	Id         int64  `xml:"budgetId,omitempty"`           // A unique identifier
 	Name       string `xml:"name"`                         // A descriptive name
-	Period     string `xml:"period"`                       // The period to spend the budget
+	Period     string `xml:"period,omitempty"`             // The period to spend the budget
 	Amount     int64  `xml:"amount>microAmount"`           // The amount in cents
-	Delivery   string `xml:"deliveryMethod"`               // The rate at which the budget spent. valid options are STANDARD or ACCELERATED.
+	Delivery   string `xml:"deliveryMethod,omitempty"`     // The rate at which the budget spent. valid options are STANDARD or ACCELERATED.
 	References int64  `xml:"referenceCount,omitempty"`     // The number of campaigns using the budget
 	Shared     bool   `xml:"isExplicitlyShared,omitempty"` // If this budget was created to be shared across campaigns
 	Status     string `xml:"status,omitempty"`             // The status of the budget. can be ENABLED, REMOVED, UNKNOWN

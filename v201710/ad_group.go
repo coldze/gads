@@ -33,10 +33,12 @@ type AdGroup struct {
 	AdServingOptimizationStatus  string                         `xml:"adServingOptimizationStatus"`
 	Status                       string                         `xml:"status,omitempty"`
 	Settings                     []AdSetting                    `xml:"settings,omitempty"`
+	Labels                       []Label                        `xml:"labels"`
 	BiddingStrategyConfiguration []BiddingStrategyConfiguration `xml:"biddingStrategyConfiguration"`
 	ContentBidCriterionTypeGroup *string                        `xml:"contentBidCriterionTypeGroup"`
 	UrlCustomParameters          *CustomParameters              `xml:"urlCustomParameters"`
-	Labels                       []Label                        `xml:"labels"`
+	Type                         string                         `xml:"adGroupType"`
+	RotationMode                 string                         `xml:"adGroupAdRotationMode>adRotationMode"`
 }
 
 type AdGroupOperations map[string][]AdGroup

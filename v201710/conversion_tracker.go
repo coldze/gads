@@ -26,11 +26,11 @@ type ConversionTracker struct {
 	AttributionModelType         string  `xml:"attributionModelType"`
 	ConversionTrackerType        string  `xml:"conversionTrackerType"`
 	Snippet                      string  `xml:"snippet"`
-	TextFormat                   string  `xml:"textFormat"`              // "UNKNOWN", "SEARCH", "DISPLAY", "SHOPPING"
+	TextFormat                   string  `xml:"textFormat"`             // "UNKNOWN", "SEARCH", "DISPLAY", "SHOPPING"
 	ConversionPageLanguage       string  `xml:"conversionPageLanguage"` // "UNKNOWN", "SEARCH_MOBILE_APP", "DISPLAY_MOBILE_APP", "SEARCH_EXPRESS", "DISPLAY_EXPRESS"
 	BackgroundColor              string  `xml:"backgroundColor"`
 	TrackingCodeType             string  `xml:"trackingCodeType"`
-	XSIType                      *string  `xml:"xsiType,omitempty"`
+	XSIType                      *string `xml:"xsiType,omitempty"`
 	Errors                       []error `xml:"-"`
 }
 

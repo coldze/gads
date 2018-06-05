@@ -1,8 +1,5 @@
 package v201710
 
-//	"encoding/xml"
-//	"fmt"
-
 type AdGroupFeedService struct {
 	Auth
 }

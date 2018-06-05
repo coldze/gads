@@ -46,7 +46,6 @@ func NewReportDownloadService(auth *Auth) *ReportDownloadService {
 	return &ReportDownloadService{Auth: *auth}
 }
 
-
 func NewCSVParser(result chan<- map[string]string) ReportParser {
 	return func(report io.Reader) error {
 		defer close(result)

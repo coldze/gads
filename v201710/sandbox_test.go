@@ -1,11 +1,18 @@
 package v201710
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"testing"
+	"time"
+)
+
+const (
+	TARGETING_IDEA_LIMIT = 100
 )
 
 func getTestConfig() AuthConfig {
@@ -28,6 +35,374 @@ func getTestConfig() AuthConfig {
 
 	authconf, _ := NewCredentialsFromParams(creds)
 	return authconf
+}
+
+func createUniqueId() int64 {
+	return time.Now().UnixNano() * -1
+}
+
+func createBatchTextAdOperation(adgroupId int64) (operations AdGroupAdOperations) {
+	fmt.Printf("using adgroup id: %d\n", adgroupId)
+	return AdGroupAdOperations{
+		"ADD": {
+			BatchExpandedTextAd{
+				AdGroupId:     adgroupId,
+				FinalUrls:     []string{"https://getsidecar.com"},
+				HeadlinePart1: "Buy Now | Sidecar",
+				HeadlinePart2: "Buy something now",
+				Description:   "Great deal",
+				Path1:         "Data",
+				Path2:         "Apps",
+				Status:        "PAUSED",
+				Type:          "ExpandedTextAd",
+			},
+		},
+	}
+}
+
+func createBatchOperations(num int) (operations []interface{}) {
+	campaignId := createUniqueId()
+	campaignOp := CampaignOperations{
+		"ADD": {
+			Campaign{
+				Id:                     campaignId,
+				Name:                   fmt.Sprintf("dave's batch test campaign%d", num),
+				Status:                 "PAUSED",
+				StartDate:              time.Now().Format("20060102"),
+				BudgetId:               1329921755,
+				AdvertisingChannelType: "SEARCH",
+				BiddingStrategyConfiguration: &BiddingStrategyConfiguration{
+					StrategyType: "MANUAL_CPC",
+				},
+			},
+		},
+	}
+
+	operations = append(operations, campaignOp)
+
+	adgroupId := createUniqueId()
+
+	adgroupOp := AdGroupOperations{
+		"ADD": {
+			AdGroup{
+				Id:         adgroupId,
+				Name:       fmt.Sprintf("dave's batch test adgroup%d", num),
+				Status:     "ENABLED",
+				CampaignId: campaignId,
+			},
+		},
+	}
+
+	operations = append(operations, adgroupOp)
+
+	operations = append(operations, createBatchTextAdOperation(adgroupId))
+
+	keywordOps := AdGroupCriterionOperations{
+		"ADD": {
+			BiddableAdGroupCriterion{
+				AdGroupId:  adgroupId,
+				Criterion:  KeywordCriterion{Text: fmt.Sprintf("+positive +keyword%d", num), MatchType: "BROAD"},
+				UserStatus: "ENABLED",
+				BiddingStrategyConfiguration: &BiddingStrategyConfiguration{
+					Bids: []Bid{
+						Bid{
+							Type:   "CpcBid",
+							Amount: 1000000,
+						},
+					},
+				},
+			},
+			NegativeAdGroupCriterion{
+				AdGroupId: adgroupId,
+				Criterion: KeywordCriterion{Text: fmt.Sprintf("+negative +keyword%d", num), MatchType: "BROAD"},
+			},
+		},
+	}
+
+	operations = append(operations, keywordOps)
+
+	return operations
+}
+
+func TestSandboxBatchJobTesting(t *testing.T) {
+	config := getTestConfig()
+	srv := NewBatchJobService(&config.Auth)
+
+	// Create batch job
+	resp, err := srv.Mutate(
+		BatchJobOperations{
+			BatchJobOperations: []BatchJobOperation{
+				BatchJobOperation{
+					Operator: "ADD",
+					Operand:  BatchJob{},
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		t.Errorf("didn't expect an error: %v", err)
+	}
+	job := resp[0]
+
+	// Create operations
+	var operations []interface{}
+	TOTAL_SIZE := 1
+	for i := 0; i < TOTAL_SIZE; i++ {
+		operations = append(operations, createBatchOperations(i)...)
+	}
+
+	// Upload the operations
+	fmt.Printf("uploading %d operations...", len(operations))
+	helperSrv := NewBatchJobHelper(&config.Auth)
+	err = helperSrv.UploadBatchJobOperations(operations, *job.UploadUrl)
+	if err != nil {
+		t.Errorf("didn't expect an error: %v", err)
+	}
+	fmt.Println("done!")
+	start := time.Now()
+
+	SLEEP := 15
+
+	for {
+		resp, err := srv.Get(
+			Selector{
+				Fields: []string{
+					"Id",
+					"Status",
+					"DownloadUrl",
+					"ProcessingErrors",
+					"ProgressStats",
+				},
+				Predicates: []Predicate{
+					{"Id", "EQUALS", []string{strconv.FormatInt(job.Id, 10)}},
+				},
+			},
+		)
+
+		if err != nil {
+			t.Errorf("didn't expect there to be an error: %v", err)
+		}
+
+		if resp.BatchJobs[0].Status != "DONE" {
+			fmt.Printf("got a status of %s, sleeping and retrying\n", resp.BatchJobs[0].Status)
+			time.Sleep(time.Duration(SLEEP) * time.Second)
+			continue
+		}
+
+		if resp.TotalNumEntries != 1 {
+			t.Errorf("expected there to be one entry, but got %d", resp.TotalNumEntries)
+		}
+
+		fmt.Println("operations have completed processing")
+		end := int(time.Now().Sub(start).Seconds())
+		fmt.Printf("took %d seconds\n", end)
+
+		results, err := helperSrv.DownloadBatchJob(*resp.BatchJobs[0].DownloadUrl)
+		if err != nil {
+			t.Errorf("didn't expect an error: %v", err)
+		}
+
+		for _, result := range results {
+			if len(result.ErrorList) > 0 {
+				for _, e := range result.ErrorList {
+					t.Errorf("error returned for entity %s: %s", e.Errors.Trigger, e.Errors.ErrorString)
+				}
+			}
+		}
+
+		// delete the new campaign
+		firstResult := results[0].Result
+		newCampaign := firstResult.(Campaign)
+		newCampaign.Status = "REMOVED"
+		newCampaign.AdServingOptimizationStatus = ""
+
+		campaignSrv := NewCampaignService(&config.Auth)
+		_, err = campaignSrv.Mutate(CampaignOperations{
+			"SET": {
+				newCampaign,
+			},
+		})
+		if err != nil {
+			t.Errorf("didn't expect an error when deleting the new campaign: %v", err)
+		}
+
+		return
+	}
+}
+
+// NOTE: When running this on a non-production account you won't get real results
+// just stuff like "keyword XXXXXXXX" or "red herring XXXXXXXX"
+// https://groups.google.com/forum/#!msg/adwords-api/PVVYUY421yA/_yZMgEg5PiUJ
+func TestSandboxTargetingIdeaKeywords(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToQuerySearchParameter{
+				Queries: []string{"flowers"},
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
+	}
+
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
+func TestSandboxTargetingIdeaURLs(t *testing.T) {
+	config := getTestConfig()
+	srv := NewTargetingIdeaService(&config.Auth)
+
+	selector := TargetingIdeaSelector{
+		SearchParameters: []SearchParameter{
+			RelatedToUrlSearchParameter{
+				Urls:           []string{"https://getsidecar.com/"},
+				IncludeSubUrls: false,
+			},
+			NetworkSearchParameter{
+				NetworkSetting: NetworkSetting{
+					TargetGoogleSearch:         true,
+					TargetSearchNetwork:        true,
+					TargetContentNetwork:       false,
+					TargetPartnerSearchNetwork: false,
+				},
+			},
+		},
+		IdeaType:                "KEYWORD",
+		RequestedAttributeTypes: []string{"KEYWORD_TEXT"},
+		RequestType:             "IDEAS",
+		Paging:                  Paging{0, int64(TARGETING_IDEA_LIMIT)},
+	}
+	ideas, count, err := srv.Get(selector)
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(ideas) != TARGETING_IDEA_LIMIT {
+		t.Fatalf("expected %d ideas to be returned", TARGETING_IDEA_LIMIT)
+	}
+
+	if count < int64(TARGETING_IDEA_LIMIT) {
+		t.Fatalf("expected the total idea count to be at least the paging limit of %d, but got %d", TARGETING_IDEA_LIMIT, count)
+	}
+
+	fmt.Println("sample of keywords returned:")
+	for _, idea := range ideas[0:5] {
+		fmt.Println(idea.TargetingIdea[0].Value)
+	}
+}
+
+func TestSandboxTrafficEstimator(t *testing.T) {
+	config := getTestConfig()
+	estimator := NewTrafficEstimatorService(&config.Auth)
+
+	isEstimateEmpty := func(estimate KeywordEstimate) bool {
+		isEmpty := func(sEstimate StatsEstimate) bool {
+			if sEstimate.AverageCpc == 0 {
+				return true
+			}
+
+			if sEstimate.AveragePosition == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClickThroughRate == 0.0 {
+				return true
+			}
+
+			if sEstimate.ClicksPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.ImpressionsPerDay == 0.0 {
+				return true
+			}
+
+			if sEstimate.TotalCost == 0 {
+				return true
+			}
+
+			return false
+		}
+
+		empty := isEmpty(estimate.Min)
+		if empty {
+			return empty
+		}
+
+		empty = isEmpty(estimate.Max)
+		return empty
+	}
+
+	selector := TrafficEstimatorSelector{
+		CampaignEstimateRequests: []CampaignEstimateRequest{
+			CampaignEstimateRequest{
+				AdGroupEstimateRequests: []AdGroupEstimateRequest{
+					AdGroupEstimateRequest{
+						KeywordEstimateRequests: []KeywordEstimateRequest{
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "peony artificial flowers",
+									MatchType: "BROAD",
+								},
+							},
+							KeywordEstimateRequest{
+								KeywordCriterion{
+									Text:      "artificial gerbera flowers",
+									MatchType: "BROAD",
+								},
+							},
+						},
+						MaxCpc: 1000000,
+					},
+				},
+				DailyBudget: 100000,
+			},
+		}}
+
+	resp, err := estimator.Get(selector)
+
+	if err != nil {
+		t.Fatalf("didn't expect an error: %v", err)
+	}
+
+	if len(resp[0].AdGroupEstimates[0].KeywordEstimates) != 2 {
+		t.Fatal("expected estimations for each keyword")
+	}
+
+	for _, k := range resp[0].AdGroupEstimates[0].KeywordEstimates {
+		empty := isEstimateEmpty(k)
+		if empty {
+			t.Fatalf("keyword estimate has null value(s): %+v\n", k)
+		}
+	}
 }
 
 func TestSandboxCreateSharedSet(t *testing.T) {
@@ -754,4 +1129,71 @@ func TestRateError(t *testing.T) {
 
 	wg.Wait()
 
+}
+
+func TestAddSearchAdGroup(t *testing.T) {
+	config := getTestConfig()
+
+	campaigns, _, err := NewCampaignService(&config.Auth).Get(Selector{
+		Fields: []string{"Id", "Name"},
+	})
+	if err != nil {
+		t.Fatalf("didn't expect the get campaigns call to fail: %v", err)
+	}
+
+	newAdgroupName := fmt.Sprintf("test_adgroup_%d", time.Now().UnixNano())
+
+	ops := make(map[string][]AdGroup)
+	ops["ADD"] = []AdGroup{
+		AdGroup{
+			Name:         newAdgroupName,
+			CampaignId:   campaigns[0].Id,
+			Status:       "PAUSED",
+			Labels:       make([]Label, 0),
+			Type:         "SHOPPING_PRODUCT_ADS",
+			RotationMode: "OPTIMIZE",
+		},
+	}
+	adgroups, err := NewAdGroupService(&config.Auth).Mutate(ops)
+	if err != nil {
+		t.Fatalf("didn't expect an error creating adgroup: %v", err)
+	}
+
+	remove_ops := make(map[string][]AdGroup)
+	remove_ops["SET"] = []AdGroup{
+		AdGroup{
+			Id:     adgroups[0].Id,
+			Status: "REMOVED",
+		},
+	}
+	_, err = NewAdGroupService(&config.Auth).Mutate(remove_ops)
+	if err != nil {
+		t.Fatalf("didn't expect the adgroup remove to fail: %v", err)
+	}
+}
+
+type StringClient string
+
+func (s StringClient) Do(req *http.Request) (*http.Response, error) {
+	return &http.Response{
+		Body:       BufferCloser{bytes.NewBufferString(string(s))},
+		StatusCode: http.StatusInternalServerError,
+	}, nil
+}
+
+func TestSandboxEmptyErrorMessage(t *testing.T) {
+	client := StringClient(`<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: cvc-complex-type.2.4.a: Invalid content was found starting with element 'adServingOptimizationStatus'. One of '{"https://adwords.google.com/api/adwords/cm/v201710":status, "https://adwords.google.com/api/adwords/cm/v201710":settings, "https://adwords.google.com/api/adwords/cm/v201710":labels, "https://adwords.google.com/api/adwords/cm/v201710":forwardCompatibilityMap, "https://adwords.google.com/api/adwords/cm/v201710":biddingStrategyConfiguration, "https://adwords.google.com/api/adwords/cm/v201710":contentBidCriterionTypeGroup, "https://adwords.google.com/api/adwords/cm/v201710":baseCampaignId, "https://adwords.google.com/api/adwords/cm/v201710":baseAdGroupId, "https://adwords.google.com/api/adwords/cm/v201710":trackingUrlTemplate, "https://adwords.google.com/api/adwords/cm/v201710":urlCustomParameters, "https://adwords.google.com/api/adwords/cm/v201710":adGroupType, "https://adwords.google.com/api/adwords/cm/v201710":adGroupAdRotationMode}' is expected. </faultstring></soap:Fault></soap:Body></soap:Envelope>`)
+	auth := &Auth{
+		Client: client,
+	}
+
+	_, _, err := NewCampaignService(auth).Get(Selector{})
+
+	if err == nil {
+		t.Fatal("Test is not giving an error")
+	}
+
+	if err != nil && err.Error() == "" {
+		t.Fatal("Test giving a blank error message")
+	}
 }

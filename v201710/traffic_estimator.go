@@ -21,6 +21,7 @@ type AdGroupEstimateRequest struct {
 
 type CampaignEstimateRequest struct {
 	AdGroupEstimateRequests []AdGroupEstimateRequest `xml:"adGroupEstimateRequests"`
+	DailyBudget             int64                    `xml:"https://adwords.google.com/api/adwords/cm/v201710 dailyBudget>microAmount"`
 }
 
 type TrafficEstimatorSelector struct {

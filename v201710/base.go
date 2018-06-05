@@ -3,6 +3,7 @@ package v201710
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -291,6 +292,10 @@ func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (
 					origErr: &fault.Errors,
 				}
 			}
+		}
+
+		if fault.Errors.ApiExceptionFaults == nil {
+			return soapResp.Body.Response, errors.New(fault.FaultString)
 		}
 
 		return soapResp.Body.Response, &fault.Errors
