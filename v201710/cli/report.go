@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	gads "github.com/coldze/gads/v201710"
+	gads "github.com/coldze/gads/v201802"
 )
 
 var configJson = flag.String("oauth", "./oauth.json", "API credentials")

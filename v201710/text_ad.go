@@ -1,4 +1,4 @@
-package v201710
+package v201802
 
 type Ad struct {
 	AdGroupId int64  `xml:"-"`

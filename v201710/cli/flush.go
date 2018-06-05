@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"log"
 
-	gads "github.com/coldze/gads/v201710"
+	gads "github.com/coldze/gads/v201802"
 	"golang.org/x/oauth2"
 )
 

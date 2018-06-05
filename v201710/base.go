@@ -1,4 +1,4 @@
-package v201710
+package v201802
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version               = "v201710"
+	version               = "v201802"
 	rootUrl               = "https://adwords.google.com/api/adwords/cm/"
 	baseUrl               = "https://adwords.google.com/api/adwords/cm/" + version
 	rootMcmUrl            = "https://adwords.google.com/api/adwords/mcm/"
@@ -121,8 +121,8 @@ type OrderBy struct {
 }
 
 type Paging struct {
-	Offset int64 `xml:"https://adwords.google.com/api/adwords/cm/v201710 startIndex"`
-	Limit  int64 `xml:"https://adwords.google.com/api/adwords/cm/v201710 numberResults"`
+	Offset int64 `xml:"https://adwords.google.com/api/adwords/cm/v201802 startIndex"`
+	Limit  int64 `xml:"https://adwords.google.com/api/adwords/cm/v201802 numberResults"`
 }
 
 type Selector struct {
@@ -139,32 +139,32 @@ type AWQLQuery struct {
 	Query   string `xml:"query"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.DayOfWeek
+// https://developers.google.com/adwords/api/docs/reference/v201802/AdGroupExtensionSettingService.DayOfWeek
 // Days of the week.
 // MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 type DayOfWeek string
 
-// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.MinuteOfHour
+// https://developers.google.com/adwords/api/docs/reference/v201802/AdGroupExtensionSettingService.MinuteOfHour
 // Minutes in an hour. Currently only 0, 15, 30, and 45 are supported
 // ZERO, FIFTEEN, THIRTY, FORTY_FIVE
 type MinuteOfHour string
 
-// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.GeoRestriction
+// https://developers.google.com/adwords/api/docs/reference/v201802/AdGroupExtensionSettingService.GeoRestriction
 // A restriction used to determine if the request context's geo should be matched.
 // UNKNOWN, LOCATION_OF_PRESENCE
 type GeoRestriction string
 
-// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.PolicyData
+// https://developers.google.com/adwords/api/docs/reference/v201802/AdGroupExtensionSettingService.PolicyData
 // Approval and policy information attached to an entity.
 type PolicyData struct {
-	DisapprovalReasons []DisapprovalReason `xml:"https://adwords.google.com/api/adwords/cm/v201710 disapprovalReasons,omitempty"`
-	PolicyDataType     string              `xml:"https://adwords.google.com/api/adwords/cm/v201710 PolicyData.Type,omitempty"`
+	DisapprovalReasons []DisapprovalReason `xml:"https://adwords.google.com/api/adwords/cm/v201802 disapprovalReasons,omitempty"`
+	PolicyDataType     string              `xml:"https://adwords.google.com/api/adwords/cm/v201802 PolicyData.Type,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201710/AdGroupExtensionSettingService.DisapprovalReason
+// https://developers.google.com/adwords/api/docs/reference/v201802/AdGroupExtensionSettingService.DisapprovalReason
 // Container for information about why an AdWords entity was disapproved.
 type DisapprovalReason struct {
-	ShortName string `xml:"https://adwords.google.com/api/adwords/cm/v201710 shortName,omitempty"`
+	ShortName string `xml:"https://adwords.google.com/api/adwords/cm/v201802 shortName,omitempty"`
 }
 
 // error parsers

@@ -1,4 +1,4 @@
-package v201710
+package v201802
 
 import (
 	sha256 "crypto/sha256"
@@ -234,7 +234,7 @@ func NewMutateMembersOperand() *MutateMembersOperand {
 //
 // Relevant documentation
 //
-//     https://developers.google.com/adwords/api/docs/reference/v201710/AdwordsUserListService#get
+//     https://developers.google.com/adwords/api/docs/reference/v201802/AdwordsUserListService#get
 //
 func (s AdwordsUserListService) Get(selector Selector) (userLists []UserList, err error) {
 	selector.XMLName = xml.Name{baseUrl, "serviceSelector"}
@@ -287,7 +287,7 @@ func (s AdwordsUserListService) Get(selector Selector) (userLists []UserList, er
 //
 // Relevant documentation
 //
-//     https://developers.google.com/adwords/api/docs/reference/v201710/AdwordsUserListService#mutate
+//     https://developers.google.com/adwords/api/docs/reference/v201802/AdwordsUserListService#mutate
 //
 func (s *AdwordsUserListService) Mutate(userListOperations UserListOperations) (adwordsUserLists []UserList, err error) {
 
@@ -337,7 +337,7 @@ func (s *AdwordsUserListService) Mutate(userListOperations UserListOperations) (
 //
 // Relevant documentation
 //
-//     https://developers.google.com/adwords/api/docs/reference/v201710/AdwordsUserListService#mutateMembers
+//     https://developers.google.com/adwords/api/docs/reference/v201802/AdwordsUserListService#mutateMembers
 //
 func (s *AdwordsUserListService) MutateMembers(mutateMembersOperations MutateMembersOperations) (adwordsUserLists []UserList, err error) {
 	mutateMembersOperations.XMLName = xml.Name{
