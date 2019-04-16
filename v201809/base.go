@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version               = "v201806"
+	version               = "v201809"
 	rootUrl               = "https://adwords.google.com/api/adwords/cm/"
 	baseUrl               = "https://adwords.google.com/api/adwords/cm/" + version
 	rootMcmUrl            = "https://adwords.google.com/api/adwords/mcm/"
