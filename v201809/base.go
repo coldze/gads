@@ -173,7 +173,32 @@ func selectorError() (err error) {
 	return err
 }
 
+func (a *Auth) do(serviceUrl ServiceUrl, action string, body, ret interface{}) error {
+	raw, err := a.doRequest(serviceUrl, action, body)
+	if err != nil {
+		return err
+	}
+
+	if err = xml.Unmarshal([]byte(raw), &ret); err != nil {
+		return err
+	}
+
+	if level := os.Getenv("DEBUG"); level != "" {
+		if resBody, err := xml.MarshalIndent(ret, "  ", "  "); err != nil {
+			fmt.Println("warn: ", err)
+		} else {
+			fmt.Printf("response->\n%s\n", string(resBody))
+		}
+	}
+
+	return nil
+}
+
 func (a *Auth) request(serviceUrl ServiceUrl, action string, body interface{}) (respBody []byte, err error) {
+	return a.doRequest(serviceUrl, action, body)
+}
+
+func (a *Auth) doRequest(serviceUrl ServiceUrl, action string, body interface{}) (respBody []byte, err error) {
 
 	type devToken struct {
 		XMLName xml.Name
