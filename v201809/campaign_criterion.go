@@ -1,6 +1,9 @@
 package v201809
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 type CampaignCriterionService struct {
 	Auth
@@ -14,12 +17,16 @@ type CampaignCriterion struct {
 	CampaignId  int64     `xml:"campaignId"`
 	IsNegative  bool      `xml:"isNegative,omitempty"`
 	Criterion   Criterion `xml:"criterion"`
-	BidModifier *float64  `xml:"bidModifier,omitempty"`
+	BidModifier float64   `xml:"bidModifier,omitempty"`
+	Status      string    `xml:"campaignCriterionStatus,omnitempty"`
 	Errors      []error   `xml:"-"`
+	Type        string    `xml:"-"`
+	Id          int64     `xml:"-"`
 }
 
+type NegativeCampaignCriterion CampaignCriterion
+
 func (cc CampaignCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	isNegative := false
 	//fmt.Printf("processing -> %#v\n",ncc)
 	start.Attr = append(
 		start.Attr,
@@ -30,11 +37,17 @@ func (cc CampaignCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 	)
 	e.EncodeToken(start)
 	e.EncodeElement(&cc.CampaignId, xml.StartElement{Name: xml.Name{"", "campaignId"}})
-	e.EncodeElement(&isNegative, xml.StartElement{Name: xml.Name{"", "isNegative"}})
+
+	if cc.Criterion == nil {
+		var ok bool
+		if cc.Criterion, ok = CriterionFromIdAndType(cc.Id, cc.Type); !ok {
+			return fmt.Errorf("missing criterion")
+		}
+	}
 	if err := criterionMarshalXML(cc.Criterion, e); err != nil {
 		return err
 	}
-	if cc.BidModifier != nil {
+	if cc.BidModifier != 0 {
 		e.EncodeElement(&cc.BidModifier, xml.StartElement{Name: xml.Name{"", "bidModifier"}})
 	}
 
@@ -42,19 +55,10 @@ func (cc CampaignCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 	return nil
 }
 
-type NegativeCampaignCriterion struct {
-	CampaignId  int64     `xml:"campaignId"`
-	IsNegative  bool      `xml:"isNegative,omitempty"`
-	Criterion   Criterion `xml:"criterion"`
-	BidModifier *float64  `xml:"bidModifier,omitempty"`
-	Errors      []error   `xml:"-"`
-}
-
 type CampaignCriterions []interface{}
 type CampaignCriterionOperations map[string]CampaignCriterions
 
 func (ncc NegativeCampaignCriterion) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	isNegative := true
 	//fmt.Printf("processing -> %#v\n",ncc)
 	start.Attr = append(
 		start.Attr,
@@ -65,14 +69,14 @@ func (ncc NegativeCampaignCriterion) MarshalXML(e *xml.Encoder, start xml.StartE
 	)
 	e.EncodeToken(start)
 	e.EncodeElement(&ncc.CampaignId, xml.StartElement{Name: xml.Name{"", "campaignId"}})
-	e.EncodeElement(&isNegative, xml.StartElement{Name: xml.Name{"", "isNegative"}})
 	criterionMarshalXML(ncc.Criterion, e)
 	e.EncodeToken(start.End())
 	return nil
 }
 
 func (ccs *CampaignCriterions) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
-	cc := NegativeCampaignCriterion{}
+	cc := CampaignCriterion{}
+
 	for token, err := dec.Token(); err == nil; token, err = dec.Token() {
 		if err != nil {
 			return err
@@ -89,6 +93,7 @@ func (ccs *CampaignCriterions) UnmarshalXML(dec *xml.Decoder, start xml.StartEle
 				if err != nil {
 					return err
 				}
+				cc.Id, cc.Type, _ = CriterionIdAndType(criterion)
 				cc.Criterion = criterion
 			case "bidModifier":
 				if err := dec.DecodeElement(&cc.BidModifier, &start); err != nil {
@@ -98,10 +103,18 @@ func (ccs *CampaignCriterions) UnmarshalXML(dec *xml.Decoder, start xml.StartEle
 				if err := dec.DecodeElement(&cc.IsNegative, &start); err != nil {
 					return err
 				}
+			case "campaignCriterionStatus":
+				if err := dec.DecodeElement(&cc.Status, &start); err != nil {
+					return err
+				}
 			}
 		}
 	}
-	*ccs = append(*ccs, cc)
+	if cc.IsNegative {
+		*ccs = append(*ccs, NegativeCampaignCriterion(cc))
+	} else {
+		*ccs = append(*ccs, cc)
+	}
 	return nil
 }
 
@@ -139,7 +152,13 @@ func NewNegativeCampaignCriterion(campaignId int64, bidModifier float64, criteri
 
 func (s *CampaignCriterionService) Get(selector Selector) (campaignCriterions CampaignCriterions, totalCount int64, err error) {
 	selector.XMLName = xml.Name{baseUrl, "serviceSelector"}
-	respBody, err := s.Auth.request(
+	getResp := struct {
+		XMLName            xml.Name
+		Size               int64              `xml:"rval>totalNumEntries"`
+		CampaignCriterions CampaignCriterions `xml:"rval>entries"`
+	}{}
+
+	err = s.Auth.do(
 		campaignCriterionServiceUrl,
 		"get",
 		struct {
@@ -152,40 +171,23 @@ func (s *CampaignCriterionService) Get(selector Selector) (campaignCriterions Ca
 			},
 			Sel: selector,
 		},
+		&getResp,
 	)
-	if err != nil {
-		return campaignCriterions, totalCount, err
-	}
-	getResp := struct {
-		Size               int64              `xml:"rval>totalNumEntries"`
-		CampaignCriterions CampaignCriterions `xml:"rval>entries"`
-	}{}
-	err = xml.Unmarshal([]byte(respBody), &getResp)
 	if err != nil {
 		return campaignCriterions, totalCount, err
 	}
 	return getResp.CampaignCriterions, getResp.Size, err
 }
 
-func (s *CampaignCriterionService) Mutate(campaignCriterionOperations CampaignCriterionOperations) (campaignCriterions CampaignCriterions, err error) {
-	type campaignCriterionOperation struct {
-		Action            string      `xml:"operator"`
-		CampaignCriterion interface{} `xml:"operand"`
-	}
-	operations := []campaignCriterionOperation{}
-	for action, campaignCriterions := range campaignCriterionOperations {
-		for _, campaignCriterion := range campaignCriterions {
-			operations = append(operations,
-				campaignCriterionOperation{
-					Action:            action,
-					CampaignCriterion: campaignCriterion,
-				},
-			)
-		}
-	}
+type CampaignCriterionOperation struct {
+	Action            string      `xml:"operator"`
+	CampaignCriterion interface{} `xml:"operand"`
+}
+
+func (s *CampaignCriterionService) MutateOperations(operations []CampaignCriterionOperation) (CampaignCriterions, error) {
 	mutation := struct {
 		XMLName xml.Name
-		Ops     []campaignCriterionOperation `xml:"operations"`
+		Ops     []CampaignCriterionOperation `xml:"operations"`
 	}{
 		XMLName: xml.Name{
 			Space: baseUrl,
@@ -193,7 +195,12 @@ func (s *CampaignCriterionService) Mutate(campaignCriterionOperations CampaignCr
 		},
 		Ops: operations,
 	}
-	respBody, err := s.Auth.request(campaignCriterionServiceUrl, "mutate", mutation)
+
+	mutateResp := struct {
+		XMLName            xml.Name
+		CampaignCriterions CampaignCriterions `xml:"rval>value"`
+	}{}
+	err := s.Auth.do(campaignCriterionServiceUrl, "mutate", mutation, &mutateResp)
 	if err != nil {
 		/*
 			    switch t := err.(type) {
@@ -223,17 +230,26 @@ func (s *CampaignCriterionService) Mutate(campaignCriterionOperations CampaignCr
 			      }
 			    default:
 		*/
-		return campaignCriterions, err
+		return nil, err
 		//}
 	}
-	mutateResp := struct {
-		CampaignCriterions CampaignCriterions `xml:"rval>value"`
-	}{}
-	err = xml.Unmarshal([]byte(respBody), &mutateResp)
-	if err != nil {
-		return campaignCriterions, err
-	}
 	return mutateResp.CampaignCriterions, err
+}
+
+func (s *CampaignCriterionService) Mutate(campaignCriterionOperations CampaignCriterionOperations) (campaignCriterions CampaignCriterions, err error) {
+	operations := []CampaignCriterionOperation{}
+	for action, campaignCriterions := range campaignCriterionOperations {
+		for _, campaignCriterion := range campaignCriterions {
+			operations = append(operations,
+				CampaignCriterionOperation{
+					Action:            action,
+					CampaignCriterion: campaignCriterion,
+				},
+			)
+		}
+	}
+
+	return s.MutateOperations(operations)
 }
 
 func (s *CampaignCriterionService) Query(query string) (campaignCriterions CampaignCriterions, totalCount int64, err error) {

@@ -5,6 +5,32 @@ import (
 	"fmt"
 )
 
+func CriterionIdAndType(crit Criterion) (int64, string, bool) {
+	switch c := crit.(type) {
+	case AdScheduleCriterion:
+		return c.Id, "AdSchedule", true
+	case Location:
+		return c.Id, "Location", true
+	case PlatformCriterion:
+		return c.Id, "Platform", true
+	}
+
+	return -1, "", false
+}
+
+func CriterionFromIdAndType(id int64, kind string) (Criterion, bool) {
+	switch kind {
+	case "AdSchedule":
+		return AdScheduleCriterion{Id: id}, true
+	case "Location":
+		return Location{Id: id}, true
+	case "Platform":
+		return PlatformCriterion{Id: id}, true
+	}
+
+	return nil, false
+}
+
 // DayOfWeek: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 // StartHour: 0~23 inclusive
 // StartMinute: ZERO, FIFTEEN, THIRTY, FORTY_FIVE
@@ -12,11 +38,11 @@ import (
 // EndMinute: ZERO, FIFTEEN, THIRTY, FORTY_FIVE
 type AdScheduleCriterion struct {
 	Id          int64  `xml:"id,omitempty"`
-	DayOfWeek   string `xml:"dayOfWeek"`
-	StartHour   string `xml:"startHour"`
-	StartMinute string `xml:"startMinute"`
-	EndHour     string `xml:"endHour"`
-	EndMinute   string `xml:"endMinute"`
+	DayOfWeek   string `xml:"dayOfWeek,omitempty"`
+	StartHour   string `xml:"startHour,omitempty"`
+	StartMinute string `xml:"startMinute,omitempty"`
+	EndHour     string `xml:"endHour,omitempty"`
+	EndMinute   string `xml:"endMinute,omitempty"`
 }
 
 // AgeRangeType: AGE_RANGE_18_24, AGE_RANGE_25_34, AGE_RANGE_35_44, AGE_RANGE_45_54, AGE_RANGE_55_64, AGE_RANGE_65_UP, AGE_RANGE_UNDETERMINED, UNKNOWN
@@ -33,7 +59,7 @@ type CarrierCriterion struct {
 
 type ContentLabelCriterion struct {
 	Id               int64  `xml:"id,omitempty"`
-	ContentLabelType string `xml:"contentLabelType"` // ContentLabelType: "ADULTISH", "AFE", "BELOW_THE_FOLD", "CONFLICT", "DP", "EMBEDDED_VIDEO", "GAMES", "JACKASS", "PROFANITY", "UGC_FORUMS", "UGC_IMAGES", "UGC_SOCIAL", "UGC_VIDEOS", "SIRENS", "TRAGEDY", "VIDEO", "UNKNOWN"
+	ContentLabelType string `xml:"contentLabelType"` // ContentLabelType: "ADULTISH", "BELOW_THE_FOLD", "DP", "EMBEDDED_VIDEO", "GAMES", "JUVENILE", "PROFANITY", "TRAGEDY", "VIDEO", "VIDEO_RATING_DV_G", "VIDEO_RATING_DV_PG", "VIDEO_RATING_DV_T", "VIDEO_RATING_DV_MA", "VIDEO_NOT_YET_RATED", "LIVE_STREAMING_VIDEO", "UNKNOWN"
 }
 
 type GenderCriterion struct {
@@ -85,14 +111,14 @@ type LanguageCriterion struct {
 // TargetingStatus: ACTIVE, OBSOLETE, PHASING_OUT
 // ParentLocations:
 type Location struct {
-	Id            int64         `xml:"https://adwords.google.com/api/adwords/cm/v201809 id,omitempty"`
-	Type          CriterionType `xml:"https://adwords.google.com/api/adwords/cm/v201809 type,omitempty"`
-	CriterionType CriterionType `xml:"https://adwords.google.com/api/adwords/cm/v201809 Criterion.Type,omitempty"`
+	Id            int64  `xml:"https://adwords.google.com/api/adwords/cm/v201809 id,omitempty"`
+	Type          string `xml:"https://adwords.google.com/api/adwords/cm/v201809 type,omitempty"`
+	CriterionType string `xml:"https://adwords.google.com/api/adwords/cm/v201809 Criterion.Type,omitempty"`
 
-	LocationName    string                  `xml:"https://adwords.google.com/api/adwords/cm/v201809 locationName,omitempty"`
-	DisplayType     string                  `xml:"https://adwords.google.com/api/adwords/cm/v201809 displayType,omitempty"`
-	TargetingStatus LocationTargetingStatus `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetingStatus,omitempty"`
-	ParentLocations []Location              `xml:"https://adwords.google.com/api/adwords/cm/v201809 parentLocations,omitempty"`
+	LocationName    string     `xml:"https://adwords.google.com/api/adwords/cm/v201809 locationName,omitempty"`
+	DisplayType     string     `xml:"https://adwords.google.com/api/adwords/cm/v201809 displayType,omitempty"`
+	TargetingStatus string     `xml:"https://adwords.google.com/api/adwords/cm/v201809 targetingStatus,omitempty"`
+	ParentLocations []Location `xml:"https://adwords.google.com/api/adwords/cm/v201809 parentLocations,omitempty"`
 }
 
 // MobileAppCategoryId:

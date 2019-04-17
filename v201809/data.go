@@ -13,11 +13,18 @@ func NewDataService(auth *Auth) *DataService {
 }
 
 type LandscapePoint struct {
-	Bid                 *int64 `xml:"bid>microAmount,omitempty"`
-	Clicks              *int64 `xml:"clicks,omitempty"`
-	Cost                *int64 `xml:"cost>microAmount,omitempty"`
-	Impressions         *int64 `xml:"impressions,omitempty"`
-	PromotedImpressions *int64 `xml:"promotedImpressions,omitempty"`
+	Bid                      *int64   `xml:"bid>microAmount,omitempty" json:",omitempty"`
+	Clicks                   *int64   `xml:"clicks,omitempty"`
+	Cost                     *int64   `xml:"cost>microAmount,omitempty"`
+	Impressions              *int64   `xml:"impressions,omitempty"`
+	PromotedImpressions      *int64   `xml:"promotedImpressions,omitempty"`
+	RequiredBudget           *int64   `xml:"requiredBudget>microAmount,omitempty" json:",omitempty"`
+	BidModifier              *float64 `xml:"bidModifier,omitempty" json:",omitempty"`
+	TotalLocalImpressions    *int64   `xml:"totalLocalImpressions,omitempty" json:",omitempty"`
+	TotalLocalClicks         *int64   `xml:"totalLocalClicks,omitempty" json:",omitempty"`
+	TotalLocalCost           *int64   `xml:"totalLocalCost>microAmount,omitempty" json:",omitempty"`
+	BiddableConversions      *float64 `xml:"biddableConversions,omitempty"`
+	BiddableConversionsValue *float64 `xml:"biddableConversionsValue,omitempty"`
 }
 
 type BidLandscape struct {
@@ -106,6 +113,40 @@ func (s *DataService) GetAdGroupBidLandscape(selector Selector) (adGroupBidLands
 		return adGroupBidLandscapes, totalCount, err
 	}
 	return getResp.AdGroupBidLandscapes, getResp.Size, err
+}
+
+func (s *DataService) GetCampaignCriterionBidLandscape(selector Selector) (ret []CriterionBidLandscape, totalCount int64, err error) {
+	// The default namespace, "", will break in 1.5 with the addition of
+	// custom namespace support.  Hence, we have to ensure that the baseUrl is
+	// set again as the proper namespace for the service/serviceSelector element
+	selector.XMLName = xml.Name{baseUrl, "serviceSelector"}
+
+	respBody, err := s.Auth.request(
+		dataServiceUrl,
+		"getCampaignCriterionBidLandscape",
+		struct {
+			XMLName xml.Name
+			Sel     Selector
+		}{
+			XMLName: xml.Name{
+				Space: baseUrl,
+				Local: "getCampaignCriterionBidLandscape",
+			},
+			Sel: selector,
+		},
+	)
+	if err != nil {
+		return ret, totalCount, err
+	}
+	getResp := struct {
+		Size                   int64                   `xml:"rval>totalNumEntries"`
+		CriterionBidLandscapes []CriterionBidLandscape `xml:"rval>entries"`
+	}{}
+	err = xml.Unmarshal([]byte(respBody), &getResp)
+	if err != nil {
+		return ret, totalCount, err
+	}
+	return getResp.CriterionBidLandscapes, getResp.Size, err
 }
 
 // GetCriterionBidLandscape returns an array of CriterionBidLandscape objects

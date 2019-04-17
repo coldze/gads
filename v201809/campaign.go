@@ -48,6 +48,10 @@ type CampaignSetting struct {
 
 	// TrackingSetting
 	TrackingUrl *string `xml:"trackingUrl,omitempty"`
+
+	MerchantId       int64  `xml:"merchantId,omitempty"`
+	SalesCountry     string `xml:"salesCountry,omitempty"`
+	CampaignPriority *int   `xml:"campaignPriority,omitempty"`
 }
 
 func NewDynamicSearchAdsSetting(domainName, languageCode string) CampaignSetting {
@@ -254,31 +258,22 @@ func (s *CampaignService) Get(selector Selector) (campaigns []Campaign, totalCou
 //
 //     https://developers.google.com/adwords/api/docs/reference/v201409/CampaignService#mutate
 //
-func (s *CampaignService) Mutate(campaignOperations CampaignOperations) (campaigns []Campaign, err error) {
-	type campaignOperation struct {
-		Action   string   `xml:"operator"`
-		Campaign Campaign `xml:"operand"`
-	}
-	operations := []campaignOperation{}
-	for action, campaigns := range campaignOperations {
-		for _, campaign := range campaigns {
-			operations = append(operations,
-				campaignOperation{
-					Action:   action,
-					Campaign: campaign,
-				},
-			)
-		}
-	}
+
+type CampaignOperation struct {
+	Action   string   `xml:"operator"`
+	Campaign Campaign `xml:"operand"`
+}
+
+func (s *CampaignService) MutateOperations(ops []CampaignOperation) (campaigns []Campaign, err error) {
 	mutation := struct {
 		XMLName xml.Name
-		Ops     []campaignOperation `xml:"operations"`
+		Ops     []CampaignOperation `xml:"operations"`
 	}{
 		XMLName: xml.Name{
 			Space: baseUrl,
 			Local: "mutate",
 		},
-		Ops: operations}
+		Ops: ops}
 	respBody, err := s.Auth.request(campaignServiceUrl, "mutate", mutation)
 	if err != nil {
 		return campaigns, err
@@ -292,6 +287,21 @@ func (s *CampaignService) Mutate(campaignOperations CampaignOperations) (campaig
 	}
 
 	return mutateResp.Campaigns, err
+}
+
+func (s *CampaignService) Mutate(campaignOperations CampaignOperations) (campaigns []Campaign, err error) {
+	operations := []CampaignOperation{}
+	for action, campaigns := range campaignOperations {
+		for _, campaign := range campaigns {
+			operations = append(operations,
+				CampaignOperation{
+					Action:   action,
+					Campaign: campaign,
+				},
+			)
+		}
+	}
+	return s.MutateOperations(operations)
 }
 
 // Mutate allows you to add and removes labels from campaigns.

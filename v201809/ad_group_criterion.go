@@ -28,8 +28,9 @@ type Cpc struct {
 type AdGroupCriterions []interface{}
 
 type AdGroupCriterionLabel struct {
-	AdGroupCriterionId int64 `xml:"adGroupCriterionId"`
-	LabelId            int64 `xml:"labelId"`
+	AdGroupId   int64 `xml:"adGroupId"`
+	CriterionId int64 `xml:"criterionId"`
+	LabelId     int64 `xml:"labelId"`
 }
 
 type AdGroupCriterionLabelOperations map[string][]AdGroupCriterionLabel
