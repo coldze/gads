@@ -93,7 +93,7 @@ func NewBatchJobService(auth *Auth) *BatchJobService {
 //		},
 //	)
 //
-// 	https://developers.google.com/adwords/api/docs/reference/v201806/BatchJobService#get
+// 	https://developers.google.com/adwords/api/docs/reference/v201809/BatchJobService#get
 func (s *BatchJobService) Get(selector Selector) (batchJobPage BatchJobPage, err error) {
 
 	selector.XMLName = xml.Name{baseUrl, "selector"}
@@ -135,7 +135,7 @@ func (s *BatchJobService) Get(selector Selector) (batchJobPage BatchJobPage, err
 //		},
 //	)
 //
-// 	https://developers.google.com/adwords/api/docs/reference/v201806/BatchJobService#mutate
+// 	https://developers.google.com/adwords/api/docs/reference/v201809/BatchJobService#mutate
 func (s *BatchJobService) Mutate(batchJobOperations BatchJobOperations) (batchJobs []BatchJob, err error) {
 
 	mutation := struct {

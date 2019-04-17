@@ -60,7 +60,7 @@ func NewDynamicSearchAdsSetting(domainName, languageCode string) CampaignSetting
 
 func NewGeoTargetTypeSetting(positiveGeoTargetType, negativeGeoTargetType string) CampaignSetting {
 	return CampaignSetting{
-		Type: "GeoTargetTypeSetting",
+		Type:                  "GeoTargetTypeSetting",
 		PositiveGeoTargetType: &positiveGeoTargetType,
 		NegativeGeoTargetType: &negativeGeoTargetType,
 	}

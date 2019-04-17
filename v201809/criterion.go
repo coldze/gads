@@ -47,7 +47,7 @@ type KeywordCriterion struct {
 	MatchType string `xml:"https://adwords.google.com/api/adwords/cm/v201809 matchType,omitempty"` // MatchType:  "EXACT", "PHRASE", "BROAD"
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.Keyword
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.Keyword
 // Represents a keyword.
 type Keyword struct {
 	Id            int64         `xml:"https://adwords.google.com/api/adwords/cm/v201809 id,omitempty"`
@@ -58,16 +58,16 @@ type Keyword struct {
 	MatchType KeywordMatchType `xml:"https://adwords.google.com/api/adwords/cm/v201809 matchType,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.KeywordMatchType
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.KeywordMatchType
 // Match type of a keyword. i.e. the way we match a keyword string with search queries.
 // EXACT, PHRASE, BROAD
 type KeywordMatchType string
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.Criterion.Type
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.Criterion.Type
 // The types of criteria
 type CriterionType string
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.LocationTargetingStatus
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.LocationTargetingStatus
 // Enum that represents the different Targeting Status values for a Location criterion.
 // ACTIVE, OBSOLETE, PHASING_OUT
 type LocationTargetingStatus string
@@ -78,7 +78,7 @@ type LanguageCriterion struct {
 	Name string `xml:"https://adwords.google.com/api/adwords/cm/v201809 name,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.Location
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.Location
 // Represents Location criterion.  A criterion of this type can only be created using an ID.
 // LocationName:
 // DisplayType:

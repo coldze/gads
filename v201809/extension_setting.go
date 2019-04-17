@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.ExtensionSetting
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.ExtensionSetting
 // A setting specifying when and which extensions should serve at a given level (customer, campaign, or ad group).
 type ExtensionSetting struct {
 	PlatformRestrictions ExtensionSettingPlatform `xml:"platformRestrictions,omitempty"`
@@ -13,14 +13,14 @@ type ExtensionSetting struct {
 	Extensions Extension `xml:"https://adwords.google.com/api/adwords/cm/v201809 extensions,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.ExtensionSetting.Platform
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.ExtensionSetting.Platform
 // Different levels of platform restrictions
 // DESKTOP, MOBILE, NONE
 type ExtensionSettingPlatform string
 
 type Extension interface{}
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.ExtensionFeedItem
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.ExtensionFeedItem
 // Contains base extension feed item data for an extension in an extension feed managed by AdWords.
 type ExtensionFeedItem struct {
 	XMLName xml.Name `json:"-" xml:"extensions"`
@@ -43,7 +43,7 @@ type ExtensionFeedItem struct {
 	ExtensionFeedItemType string `xml:"https://adwords.google.com/api/adwords/cm/v201809 ExtensionFeedItem.Type,omitempty"`
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/AdGroupExtensionSettingService.CallFeedItem
+// https://developers.google.com/adwords/api/docs/reference/v201809/AdGroupExtensionSettingService.CallFeedItem
 // Represents a Call extension.
 type CallFeedItem struct {
 	ExtensionFeedItem

@@ -12,7 +12,7 @@ func NewCampaignExtensionService(auth *Auth) *CampaignExtensionSettingService {
 	return &CampaignExtensionSettingService{Auth: *auth}
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/CampaignExtensionSettingService.CampaignExtensionSetting
+// https://developers.google.com/adwords/api/docs/reference/v201809/CampaignExtensionSettingService.CampaignExtensionSetting
 // A CampaignExtensionSetting is used to add or modify extensions being served for the specified campaign.
 type CampaignExtensionSetting struct {
 	CampaignId       int64            `xml:"https://adwords.google.com/api/adwords/cm/v201809 campaignId,omitempty"`
@@ -22,7 +22,7 @@ type CampaignExtensionSetting struct {
 
 type CampaignExtensionSettingOperations map[string][]CampaignExtensionSetting
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/CampaignExtensionSettingService#query
+// https://developers.google.com/adwords/api/docs/reference/v201809/CampaignExtensionSettingService#query
 func (s *CampaignExtensionSettingService) Query(query string) (settings []CampaignExtensionSetting, totalCount int64, err error) {
 	respBody, err := s.Auth.request(
 		campaignExtensionSettingUrl,
@@ -51,7 +51,7 @@ func (s *CampaignExtensionSettingService) Query(query string) (settings []Campai
 	return getResp.Settings, getResp.Size, err
 }
 
-// https://developers.google.com/adwords/api/docs/reference/v201806/CampaignExtensionSettingService#mutate
+// https://developers.google.com/adwords/api/docs/reference/v201809/CampaignExtensionSettingService#mutate
 func (s *CampaignExtensionSettingService) Mutate(settingsOperations CampaignExtensionSettingOperations) (settings []CampaignExtensionSetting, err error) {
 	type settingOperations struct {
 		Action  string                   `xml:"operator"`

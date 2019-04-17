@@ -108,7 +108,7 @@ type CampaignEstimate struct {
 //
 // Relevant documentation
 //
-// 		https://developers.google.com/adwords/api/docs/reference/v201806/TrafficEstimatorService#get
+// 		https://developers.google.com/adwords/api/docs/reference/v201809/TrafficEstimatorService#get
 //
 func (s *TrafficEstimatorService) Get(selector TrafficEstimatorSelector) (res []CampaignEstimate, err error) {
 
